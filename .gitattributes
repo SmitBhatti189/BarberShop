@@ -1,0 +1,9 @@
+# Store text files with LF in the repository; check out with the platform's
+# native line endings. Keeps diffs clean between Windows and macOS machines.
+* text=auto
+
+*.png binary
+*.jpg binary
+*.ico binary
+*.otf binary
+*.ttf binary

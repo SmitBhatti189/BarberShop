@@ -1,0 +1,107 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../config/assets/app_icons.dart';
+import '../../../config/theme/app_spacing.dart';
+import '../../../core/auth/auth_controller.dart';
+import '../../../core/auth/auth_models.dart';
+import '../../../core/providers.dart';
+import '../../../shared/widgets/app_button.dart';
+import '../../../shared/widgets/app_text_field.dart';
+import 'auth_form_frame.dart';
+
+class LoginScreen extends ConsumerStatefulWidget {
+  const LoginScreen({super.key});
+
+  @override
+  ConsumerState<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends ConsumerState<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _username = TextEditingController();
+  final _password = TextEditingController();
+  bool _busy = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _username.dispose();
+    _password.dispose();
+    super.dispose();
+  }
+
+  static String? required(String? value, String field) =>
+      (value == null || value.trim().isEmpty) ? 'Enter your $field' : null;
+
+  Future<void> _submit() async {
+    if (_busy || !(_formKey.currentState?.validate() ?? false)) return;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    final error = await ref.read(authControllerProvider.notifier).login(_username.text.trim(), _password.text);
+    if (!mounted) return;
+    setState(() {
+      _busy = false;
+      _error = error;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final auth = ref.watch(authControllerProvider);
+    final notice = auth is AuthSignedOut ? auth.message : null;
+    final message = _error ?? notice;
+    final canChangeServer = ref.watch(appEnvProvider).allowServerOverride;
+
+    return AuthFormFrame(
+      icon: AppIcons.services,
+      title: 'Sign in to continue',
+      child: Form(
+        key: _formKey,
+        child: AutofillGroup(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AppTextField(
+                label: 'Username',
+                prefixIcon: AppIcons.user,
+                controller: _username,
+                autofocus: true,
+                textInputAction: TextInputAction.next,
+                autofillHints: const [AutofillHints.username],
+                validator: (v) => required(v, 'username'),
+              ),
+              AppSpacing.gapLg,
+              AppTextField(
+                label: 'Password',
+                prefixIcon: AppIcons.password,
+                controller: _password,
+                obscure: true,
+                textInputAction: TextInputAction.done,
+                autofillHints: const [AutofillHints.password],
+                validator: (v) => required(v, 'password'),
+                onSubmitted: (_) => _submit(),
+              ),
+              if (message != null) ...[
+                AppSpacing.gapMd,
+                Text(message, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+              ],
+              AppSpacing.gapXl,
+              AppButton(label: 'Sign in', onPressed: _submit, loading: _busy, expand: true),
+              if (canChangeServer) ...[
+                AppSpacing.gapSm,
+                AppButton(
+                  label: 'Change server',
+                  variant: AppButtonVariant.text,
+                  onPressed: _busy ? null : () => ref.read(authControllerProvider.notifier).changeServer(),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
