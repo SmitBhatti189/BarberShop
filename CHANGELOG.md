@@ -5,6 +5,39 @@ dependencies and testing.
 
 ## [Unreleased]
 
+### Added — Dashboard layout (UI only) (2026-11-20)
+**What & why:** the dashboard from the design canvas, ready for its data. No module behind its numbers exists yet (Billing, Appointments, Inventory, Staff & pay), so following DEVELOPMENT_GUIDELINES nothing is made up: every number tile shows "—" with "Shows once <module> is built", and every panel says what will appear and which module brings it. Quick-action buttons already work — they open their sections.
+- **Who sees what** — one pure function, `dashboardLayoutFor(user)` (`features/dashboard/domain/dashboard_layout.dart`), decided only by permissions:
+  - *Manager view*: Sales today (`billing.view` or `reports.financial.view`), Appointments today + **Chairs today** panel (`appointments.view_all`), Low stock tile + panel (`inventory.view`), You owe staff + **Staff balances** panel (`compensation.view`).
+  - *Staff view* (`appointments.view` without `view_all`): My clients today + **My day** panel; with `earnings.view_own`: My commission today, My balance + **My earnings** panel. No salon-wide money (ARCHITECTURE §5.4).
+  - *Quick actions*: New bill (`billing.create`), New booking (`appointments.manage`), Add customer (`customers.manage`), Receive stock (`inventory.manage`).
+- **Layout** (`features/dashboard/presentation/dashboard_screen.dart`): greeting + date; number tiles up to four per row (fewer when narrow); then a main column (day panels) and a side column (quick actions, stock, pay) side by side from 860 px content width, stacked below that. Key figure on a dark tile (Sales today / My balance).
+- **New widgets:** `StatTile` (`widgets/stat_tile.dart`), `DashboardCard` + `ComingWithModule` (`widgets/dashboard_card.dart`). New `AppSizes` dashboard sizes, `AppIcons.forward`.
+- **Next:** when each module's API lands, give its tile a value and replace its panel's `ComingWithModule` with the real list — the layout and permission rules stay.
+- **Database / API / dependencies:** none.
+- **Testing:** `flutter test` 44 passing. New `test/features/dashboard_test.dart`: layout per role (manager, barber, all-bookings overrides own, no permissions → empty), manager screen shows only placeholders and two columns on wide screens, barber screen hides salon money and stacks on a phone, greeting by first name.
+
+### Changed — server address screen switched off (2026-11-19)
+**What & why:** owner request — for now the app should not ask which server to connect to. Switched off, not deleted, so it can come back with one line.
+- New switch `AppEnv.serverSetupEnabled = false` (`app/lib/config/env/app_env.dart`). While off: `allowServerOverride` is false (no saved-address override, no **Change server** button on login), and with no `--dart-define=API_BASE_URL` the app uses `AppEnv.builtInApiBaseUrl()` — `http://localhost:8080/api/v1`, or on web the host that served the page, port 8080. The app therefore never reaches the "Connect to the salon" screen (`ServerSetupScreen` and its route stay in the code).
+- **Flow:** start → restore session against the built-in address → Login or Dashboard.
+- **Docs:** README "Running locally" and FEATURE_FLOWS §1 note the switch and how to build for another PC.
+- **Database / API / dependencies:** none.
+- **Testing:** new test that the switch is off, no server override is allowed and the default address is set.
+
+### Changed — UI redesign, step 1: look and app shell (2026-11-18)
+**What & why:** first step of the redesign agreed on the design canvas ("Barbershop UI Redesign"). Only the shared look and the frame around every page change here; module screens follow as their modules are built. No fake data is shown — the dashboard still says which summaries are coming.
+- **Dark side menu** in both themes, sections listed under group labels *Front desk · Business · Me · Admin* (`AppNavGroup` on each `AppDestination`; menu order changed so groups stay together). Collapsed menu shows a divider instead of the label. Footer shows the server the app talks to (`core/router/app_sidebar.dart`, `app_destinations.dart`).
+- **Logo** is now a gold square with the scissors, salon name in a serif (`BrandMark`, `AppBrand(onDark:)` in `core/router/app_brand.dart`).
+- **Top bar**: gold **New bill** shortcut on tablet/desktop for people with `billing.create` (opens Billing); avatar restyled; height 60 → 64 (`app_navbar.dart`, `app_sizes.dart`).
+- **Login and server setup**: dark brand panel on the left on wide screens, logo above the form on narrow ones; serif "Welcome back" title; the server line under Sign in shows the current server with a *Change server* button (`features/auth/presentation/auth_form_frame.dart`, `login_screen.dart`, `server_setup_screen.dart`).
+- **Page titles** are larger, in the serif display face, with an optional small line above (`PageScaffold.subtitle`). The dashboard greets by time of day with today's date (`dashboard_screen.dart`).
+- **Colours:** new side-menu tokens (`sidebar*`) in `AppColors.light`/`dark`. **Gold button changed from `#A47D43` + white text to `#C9A465` + charcoal text** — white on the old gold was ~3.6:1 contrast, below the 4.5:1 minimum. The owner's `#A47D43` stays as the focus border.
+- **Type:** headings, page titles and the salon name use **Fraunces**, bundled in `app/assets/fonts/Fraunces.ttf` (360 KB variable font, from github.com/google/fonts `ofl/fraunces`) with its licence `Fraunces-OFL.txt` (SIL Open Font License 1.1 — free to bundle and ship; the licence must travel with it). Bundled rather than using a system serif because Flutter **web** cannot use installed system fonts, so headings fell back to the sans font there. Weight and optical size are set per style through `AppTypography.display()` (a variable font's weight axis does not follow `fontWeight` alone). Georgia / Noto Serif remain only as a fallback. The licence is registered on Flutter's licences page in `main.dart`. Body text stays on the platform font. Files: `app_typography.dart` (new `display()`, `brandName`, `overline`), `app_brand.dart`, `pubspec.yaml` (`fonts:` + licence asset).
+- New helper `displayServerAddress()` (`core/server/server_address.dart`); new icon `AppIcons.add`; new strings `AppStrings.tagline*`.
+- **Database / API:** none. **Dependencies:** no packages; one bundled font asset (above).
+- **Testing:** `flutter analyze` clean; `flutter test` 36 passing. New `test/core/redesign_test.dart` covers headings using the bundled font with an explicit weight axis, the server-address display, greeting by time, menu groups staying together, the dark side menu with group labels, and the New bill button per permission and screen size. Existing shell and login tests pass unchanged.
+
 ### Fixed
 - Login returned 500 when a new PostgreSQL connection took longer than 5 s (seen right after an unclean Windows restart). Pool `connectionTimeoutMillis` raised to 15 s (`server/src/db/database.ts`). Found during the live app tour; verified by logging in through the app.
 

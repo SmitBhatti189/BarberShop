@@ -37,13 +37,23 @@ class AppColors extends ThemeExtension<AppColors> {
     required this.surface,
     required this.textPrimary,
     required this.textSecondary,
+    required this.sidebarBackground,
+    required this.sidebarSurface,
+    required this.sidebarText,
+    required this.sidebarTextStrong,
+    required this.sidebarMuted,
+    required this.sidebarSelectedBackground,
+    required this.sidebarSelectedText,
+    required this.sidebarDivider,
   });
 
   static const light = AppColors(
     primaryButton: Color(0xFF202124), // owner
     primaryButtonText: Color(0xFFFFFFFF), // owner
-    goldButton: Color(0xFFA47D43), // owner
-    goldButtonText: Color(0xFFFFFFFF), // owner
+    // Redesign (2026-11): lighter gold with charcoal text. White on the
+    // owner's #A47D43 was only ~3.6:1 contrast; this pair is ~7:1.
+    goldButton: Color(0xFFC9A465),
+    goldButtonText: Color(0xFF17181A),
     secondaryButton: Color(0xFFEDE2CE), // owner
     secondaryText: Color(0xFF72552E), // owner
     hoverOverlay: Color(0xFFE9E2D5), // owner
@@ -67,6 +77,15 @@ class AppColors extends ThemeExtension<AppColors> {
     surface: Color(0xFFFFFFFF), // assumed: cards and dialogs
     textPrimary: Color(0xFF202124), // assumed: matches primary button
     textSecondary: Color(0xFF77736B), // assumed: matches unselected icon
+    // Redesign (2026-11): the side menu is dark charcoal in both themes.
+    sidebarBackground: Color(0xFF17181A),
+    sidebarSurface: Color(0xFF26272A),
+    sidebarText: Color(0xFFCFCAC1),
+    sidebarTextStrong: Color(0xFFF4F1EA),
+    sidebarMuted: Color(0xFF9B968D),
+    sidebarSelectedBackground: Color(0xFF2B261D),
+    sidebarSelectedText: Color(0xFFE8CD96),
+    sidebarDivider: Color(0xFF2A2B2E),
   );
 
   static const dark = AppColors(
@@ -97,6 +116,16 @@ class AppColors extends ThemeExtension<AppColors> {
     surface: Color(0xFF202124), // assumed: matches navigation background
     textPrimary: Color(0xFFECEAE6), // assumed
     textSecondary: Color(0xFFA6A199), // assumed: matches unselected icon
+    // One step darker than the dark page background so the menu still reads
+    // as its own panel.
+    sidebarBackground: Color(0xFF111214),
+    sidebarSurface: Color(0xFF222326),
+    sidebarText: Color(0xFFCFCAC1),
+    sidebarTextStrong: Color(0xFFF4F1EA),
+    sidebarMuted: Color(0xFF9B968D),
+    sidebarSelectedBackground: Color(0xFF2B261D),
+    sidebarSelectedText: Color(0xFFE8CD96),
+    sidebarDivider: Color(0xFF26272A),
   );
 
   static AppColors of(BuildContext context) => Theme.of(context).extension<AppColors>()!;
@@ -128,6 +157,29 @@ class AppColors extends ThemeExtension<AppColors> {
   final Color surface;
   final Color textPrimary;
   final Color textSecondary;
+
+  /// Side menu (always dark).
+  final Color sidebarBackground;
+
+  /// Raised elements inside the side menu (hover, chips).
+  final Color sidebarSurface;
+  final Color sidebarText;
+
+  /// Salon name and other emphasised text in the side menu.
+  final Color sidebarTextStrong;
+
+  /// Group labels and footer text in the side menu.
+  final Color sidebarMuted;
+  final Color sidebarSelectedBackground;
+  final Color sidebarSelectedText;
+  final Color sidebarDivider;
+
+  /// Hover / pressed feedback on the dark side menu.
+  WidgetStateProperty<Color?> get sidebarOverlay => WidgetStateProperty.resolveWith((states) {
+    if (states.contains(WidgetState.pressed) || states.contains(WidgetState.hovered)) return sidebarSurface;
+    if (states.contains(WidgetState.focused)) return sidebarSurface;
+    return null;
+  });
 
   /// Hover / pressed feedback for surfaces (nav items, menus, text buttons).
   WidgetStateProperty<Color?> get overlay => WidgetStateProperty.resolveWith((states) {

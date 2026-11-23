@@ -12,6 +12,7 @@ import '../../config/theme/app_spacing.dart';
 import '../auth/auth_controller.dart';
 import '../auth/auth_models.dart';
 import '../permissions.dart';
+import '../../shared/widgets/app_button.dart';
 import '../../shared/widgets/hover_label.dart';
 import '../ui/ui_preferences.dart';
 import 'app_brand.dart';
@@ -39,7 +40,7 @@ class AppNavBar extends ConsumerWidget implements PreferredSizeWidget {
       color: colors.navigationBackground,
       child: Container(
         height: AppSizes.navBarHeight,
-        padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+        padding: EdgeInsets.symmetric(horizontal: compact ? AppSpacing.md : AppSpacing.xl),
         decoration: BoxDecoration(
           border: Border(bottom: BorderSide(color: colors.divider)),
         ),
@@ -50,6 +51,19 @@ class AppNavBar extends ConsumerWidget implements PreferredSizeWidget {
                   ? const Align(alignment: Alignment.centerLeft, child: AppBrand())
                   : const SizedBox.shrink(),
             ),
+            // The one main action of the salon, always one click away. Phones
+            // reach Billing from the bottom bar instead.
+            if (!compact && user != null && user.can(Permissions.billingCreate)) ...[
+              AppButton(
+                key: const Key('navbar-new-bill'),
+                label: 'New bill',
+                icon: AppIcons.add,
+                variant: AppButtonVariant.gold,
+                size: AppButtonSize.small,
+                onPressed: () => context.go(AppDestinations.billing.path),
+              ),
+              AppSpacing.gapMd,
+            ],
             if (user != null) ProfileMenu(user: user, compact: compact),
           ],
         ),
@@ -171,9 +185,15 @@ class _Avatar extends StatelessWidget {
         .toUpperCase();
     return CircleAvatar(
       radius: AppSizes.avatarSize / 2,
-      backgroundColor: colors.secondaryButton,
-      foregroundColor: colors.secondaryText,
-      child: Text(initials, style: Theme.of(context).textTheme.labelMedium?.copyWith(color: colors.secondaryText)),
+      backgroundColor: colors.sidebarBackground,
+      foregroundColor: colors.sidebarSelectedText,
+      child: Text(
+        initials,
+        style: Theme.of(context).textTheme.labelMedium?.copyWith(
+          color: colors.sidebarSelectedText,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }

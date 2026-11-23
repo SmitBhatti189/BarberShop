@@ -12,20 +12,24 @@ class PageScaffold extends StatelessWidget {
     super.key,
     required this.title,
     required this.body,
+    this.subtitle,
     this.actions = const [],
     this.floatingAction,
   });
 
   final String title;
+
+  /// Small line above the title (e.g. today's date).
+  final String? subtitle;
   final Widget body;
   final List<Widget> actions;
   final Widget? floatingAction;
 
   @override
   Widget build(BuildContext context) {
-    final padding = context.layoutSize == LayoutSize.compact
-        ? AppSpacing.pagePaddingCompact
-        : AppSpacing.pagePaddingExpanded;
+    final theme = Theme.of(context);
+    final compact = context.layoutSize == LayoutSize.compact;
+    final padding = compact ? AppSpacing.pagePaddingCompact : AppSpacing.pagePaddingExpanded;
     return Scaffold(
       floatingActionButton: floatingAction,
       body: Align(
@@ -38,12 +42,25 @@ class PageScaffold extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Expanded(child: Text(title, style: Theme.of(context).textTheme.headlineSmall)),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (subtitle != null)
+                            Text(
+                              subtitle!,
+                              style: theme.textTheme.labelMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                            ),
+                          Text(title, style: compact ? theme.textTheme.headlineMedium : theme.textTheme.displaySmall),
+                        ],
+                      ),
+                    ),
                     ...actions,
                   ],
                 ),
-                AppSpacing.gapLg,
+                AppSpacing.gapXl,
                 Expanded(child: body),
               ],
             ),

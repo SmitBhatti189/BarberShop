@@ -25,4 +25,12 @@ flutter:
   uses-material-design: true
   assets:
     - assets/images/
+    - assets/fonts/Fraunces-OFL.txt
+
+  # Serif for page titles and big figures (variable font: weight and optical
+  # size are set per style in app_typography.dart). SIL Open Font License.
+  fonts:
+    - family: Fraunces
+      fonts:
+        - asset: assets/fonts/Fraunces.ttf
 

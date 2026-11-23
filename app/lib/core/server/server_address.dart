@@ -3,6 +3,14 @@ import '../../config/env/app_env.dart';
 /// Turns what a person types ("192.168.1.10:8080", "http://salon-pc:8080/")
 /// into the API base URL ("http://192.168.1.10:8080/api/v1").
 /// Returns null when the input cannot be a server address.
+/// The reverse, for showing to people: "http://192.168.1.10:8080/api/v1" →
+/// "192.168.1.10:8080". Returns null when no server is set.
+String? displayServerAddress(String baseUrl) {
+  final uri = Uri.tryParse(baseUrl.trim());
+  if (uri == null || uri.host.isEmpty) return null;
+  return uri.hasPort ? '${uri.host}:${uri.port}' : uri.host;
+}
+
 String? normalizeServerAddress(String input) {
   var text = input.trim();
   if (text.isEmpty) return null;

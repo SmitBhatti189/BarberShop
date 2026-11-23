@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../config/app_hover_labels.dart';
@@ -7,16 +8,21 @@ import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_radius.dart';
 import '../../config/theme/app_sizes.dart';
 import '../../config/theme/app_spacing.dart';
+import '../../config/theme/app_typography.dart';
 import '../../shared/widgets/hover_label.dart';
+import '../providers.dart';
+import '../server/server_address.dart';
 import 'app_brand.dart';
 import 'app_destinations.dart';
 
-/// Collapsible side menu (tablet/desktop), full height.
-/// * Header: scissors logo (+ salon name when open) and the collapse button
-///   on its right. Clicking the logo opens the Dashboard.
-/// * Open: icon + label per section.
+/// Collapsible side menu (tablet/desktop), full height, dark in both themes.
+/// * Header: logo (+ salon name when open) and the collapse button on its
+///   right. Clicking the logo opens the Dashboard.
+/// * Sections are listed under their group label (Front desk, Business, …);
+///   while collapsed a thin divider replaces the label.
 /// * Collapsed: icons only; hovering shows the section name (see
 ///   `AppHoverLabels.sidebarItems`) and clicking navigates as usual.
+/// * Footer (open only): which salon server the app talks to.
 class AppSidebar extends StatelessWidget {
   const AppSidebar({
     super.key,
@@ -36,27 +42,37 @@ class AppSidebar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
+    final children = <Widget>[];
+    AppNavGroup? group;
+    for (var i = 0; i < destinations.length; i++) {
+      final d = destinations[i];
+      if (d.group != group) {
+        children.add(_GroupHeader(group: d.group, first: group == null, collapsed: collapsed));
+        group = d.group;
+      }
+      children.add(
+        Padding(
+          padding: const EdgeInsets.only(bottom: AppSpacing.xxs),
+          child: _SidebarItem(destination: d, selected: i == selected, collapsed: collapsed),
+        ),
+      );
+    }
+
     return AnimatedContainer(
       duration: _animation,
       curve: Curves.easeOut,
       width: collapsed ? AppSizes.sidebarCollapsedWidth : AppSizes.sidebarExpandedWidth,
-      decoration: BoxDecoration(
-        color: colors.navigationBackground,
-        border: Border(right: BorderSide(color: colors.divider)),
-      ),
+      color: colors.sidebarBackground,
       child: Column(
         children: [
           _SidebarHeader(collapsed: collapsed, onToggle: onToggle),
           Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.symmetric(vertical: AppSpacing.md, horizontal: AppSpacing.md),
-              itemCount: destinations.length,
-              itemBuilder: (context, i) => Padding(
-                padding: const EdgeInsets.only(bottom: AppSpacing.xs),
-                child: _SidebarItem(destination: destinations[i], selected: i == selected, collapsed: collapsed),
-              ),
+            child: ListView(
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm, horizontal: AppSpacing.md),
+              children: children,
             ),
           ),
+          if (!collapsed) const _ServerFooter(),
         ],
       ),
     );
@@ -78,7 +94,7 @@ class _SidebarHeader extends StatelessWidget {
       height: AppSizes.navBarHeight,
       padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xs),
       decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: colors.divider)),
+        border: Border(bottom: BorderSide(color: colors.sidebarDivider)),
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -88,10 +104,17 @@ class _SidebarHeader extends StatelessWidget {
             children: [
               if (showName)
                 const Expanded(
-                  child: Align(alignment: Alignment.centerLeft, child: AppBrand()),
+                  child: Padding(
+                    padding: EdgeInsets.only(left: AppSpacing.sm),
+                    child: Align(alignment: Alignment.centerLeft, child: AppBrand(onDark: true)),
+                  ),
                 )
               else
-                const Expanded(child: Center(child: AppBrand(showName: false))),
+                const Expanded(
+                  child: Center(
+                    child: AppBrand(showName: false, onDark: true, markSize: AppSizes.brandMarkSmall),
+                  ),
+                ),
               HoverLabel(
                 enabled: AppHoverLabels.sidebarToggle,
                 message: label,
@@ -101,6 +124,8 @@ class _SidebarHeader extends StatelessWidget {
                     key: const Key('sidebar-toggle'),
                     padding: EdgeInsets.zero,
                     iconSize: AppSizes.iconMd,
+                    color: colors.sidebarMuted,
+                    style: ButtonStyle(overlayColor: colors.sidebarOverlay),
                     icon: Icon(collapsed ? AppIcons.menuExpand : AppIcons.menuCollapse, semanticLabel: label),
                     onPressed: onToggle,
                   ),
@@ -109,6 +134,38 @@ class _SidebarHeader extends StatelessWidget {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+class _GroupHeader extends StatelessWidget {
+  const _GroupHeader({required this.group, required this.first, required this.collapsed});
+
+  final AppNavGroup group;
+  final bool first;
+  final bool collapsed;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    if (collapsed) {
+      if (first) return const SizedBox.shrink();
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm, horizontal: AppSpacing.md),
+        child: Divider(color: colors.sidebarDivider),
+      );
+    }
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        first ? AppSpacing.sm : AppSpacing.lg,
+        AppSpacing.md,
+        AppSpacing.sm,
+      ),
+      child: Text(
+        group.label.toUpperCase(),
+        style: AppTypography.overline.copyWith(color: colors.sidebarMuted),
       ),
     );
   }
@@ -125,14 +182,14 @@ class _SidebarItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
     final textTheme = Theme.of(context).textTheme;
-    final iconColor = selected ? colors.selectedIcon : colors.unselectedIcon;
+    final foreground = selected ? colors.sidebarSelectedText : colors.sidebarText;
 
     final item = Material(
-      color: selected ? colors.selectedItem : Colors.transparent,
+      color: selected ? colors.sidebarSelectedBackground : Colors.transparent,
       borderRadius: AppRadius.button,
       child: InkWell(
         borderRadius: AppRadius.button,
-        overlayColor: colors.overlay,
+        overlayColor: colors.sidebarOverlay,
         onTap: () => context.go(destination.path),
         child: SizedBox(
           height: AppSizes.sidebarItemHeight,
@@ -145,7 +202,7 @@ class _SidebarItem extends StatelessWidget {
                 mainAxisAlignment: showLabel ? MainAxisAlignment.start : MainAxisAlignment.center,
                 children: [
                   if (showLabel) AppSpacing.gapMd,
-                  Icon(destination.icon, color: iconColor, size: AppSizes.iconLg),
+                  Icon(destination.icon, color: foreground, size: AppSizes.iconMd),
                   if (showLabel) ...[
                     AppSpacing.gapMd,
                     Expanded(
@@ -153,8 +210,8 @@ class _SidebarItem extends StatelessWidget {
                         destination.label,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: textTheme.labelLarge?.copyWith(
-                          color: selected ? colors.selectedIcon : colors.textPrimary,
+                        style: textTheme.titleSmall?.copyWith(
+                          color: foreground,
                           fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
                         ),
                       ),
@@ -172,6 +229,39 @@ class _SidebarItem extends StatelessWidget {
       enabled: collapsed && AppHoverLabels.sidebarItems,
       message: destination.label,
       child: Semantics(label: destination.label, selected: selected, button: true, child: item),
+    );
+  }
+}
+
+/// "Server · 192.168.1.10:8080" — reminds the salon which PC the app uses.
+class _ServerFooter extends ConsumerWidget {
+  const _ServerFooter();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final colors = AppColors.of(context);
+    final address = displayServerAddress(ref.watch(apiClientProvider).baseUrl);
+    if (address == null) return const SizedBox.shrink();
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl, vertical: AppSpacing.lg),
+      decoration: BoxDecoration(
+        border: Border(top: BorderSide(color: colors.sidebarDivider)),
+      ),
+      child: Row(
+        children: [
+          Icon(AppIcons.server, size: AppSizes.iconSm, color: colors.sidebarMuted),
+          AppSpacing.gapSm,
+          Expanded(
+            child: Text(
+              'Server · $address',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: colors.sidebarMuted),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

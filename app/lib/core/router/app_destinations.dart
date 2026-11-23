@@ -4,6 +4,18 @@ import '../../config/assets/app_icons.dart';
 import '../auth/auth_models.dart';
 import '../permissions.dart';
 
+/// Side-menu sections; destinations of one group are listed together under
+/// its label.
+enum AppNavGroup {
+  frontDesk('Front desk'),
+  business('Business'),
+  me('Me'),
+  admin('Admin');
+
+  const AppNavGroup(this.label);
+  final String label;
+}
+
 /// Every top-level section of the app, in menu order. Navigation menus and
 /// route guards are both derived from this list, so adding a module means
 /// adding one entry here and one route in app_router.dart.
@@ -12,11 +24,15 @@ class AppDestination {
     required this.path,
     required this.label,
     required this.icon,
+    this.group = AppNavGroup.frontDesk,
     this.anyOf = const [],
     this.primaryOnMobile = false,
     this.shortLabel,
     this.inMenu = true,
   });
+
+  /// Side-menu group this section is listed under.
+  final AppNavGroup group;
 
   /// False for sections reached elsewhere (e.g. Settings, from the profile
   /// box). The route and its permission check still apply.
@@ -68,36 +84,42 @@ abstract final class AppDestinations {
     primaryOnMobile: true,
   );
   static const myEarnings = AppDestination(
+    group: AppNavGroup.me,
     path: '/my-earnings',
     label: 'My earnings',
     icon: AppIcons.earnings,
     anyOf: [Permissions.earningsViewOwn],
   );
   static const services = AppDestination(
+    group: AppNavGroup.business,
     path: '/services',
     label: 'Services',
     icon: AppIcons.services,
     anyOf: [Permissions.servicesView],
   );
   static const inventory = AppDestination(
+    group: AppNavGroup.business,
     path: '/inventory',
     label: 'Inventory',
     icon: AppIcons.inventory,
     anyOf: [Permissions.inventoryView],
   );
   static const staff = AppDestination(
+    group: AppNavGroup.business,
     path: '/staff',
     label: 'Staff & pay',
     icon: AppIcons.staff,
     anyOf: [Permissions.staffView, Permissions.compensationView],
   );
   static const roles = AppDestination(
+    group: AppNavGroup.admin,
     path: '/roles',
     label: 'Roles',
     icon: AppIcons.roles,
     anyOf: [Permissions.rolesManage],
   );
   static const settings = AppDestination(
+    group: AppNavGroup.admin,
     path: '/settings',
     label: 'Settings',
     icon: AppIcons.settings,
@@ -105,15 +127,16 @@ abstract final class AppDestinations {
     inMenu: false, // opened from the profile box
   );
 
+  /// Menu order. Keep each group's sections next to each other.
   static const all = [
     dashboard,
     appointments,
     billing,
     customers,
-    myEarnings,
     services,
     inventory,
     staff,
+    myEarnings,
     roles,
     settings,
   ];

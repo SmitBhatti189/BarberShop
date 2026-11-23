@@ -3,6 +3,10 @@ abstract final class AppStrings {
   static const String appName = 'Barbershop Manager';
   static const String currencySymbol = '₹';
 
+  /// Login brand panel.
+  static const String tagline = 'Bookings, bills and chairs — in one place.';
+  static const String taglineDetail = 'Sign in on any salon device connected to the shop Wi-Fi.';
+
   static const String retry = 'Retry';
   static const String cancel = 'Cancel';
   static const String confirm = 'Confirm';

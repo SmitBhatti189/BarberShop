@@ -48,9 +48,17 @@ flutter pub get
 flutter run -d windows      # or an Android device/emulator
 ```
 
-On first launch enter the server PC's LAN address (e.g. `192.168.1.10:8080`).
-Find it with `ipconfig` (IPv4 address of the Wi-Fi adapter). A DHCP reservation on the router
-keeps it stable.
+The app does **not** ask for the server address at the moment (switched off in
+`app/lib/config/env/app_env.dart`, `serverSetupEnabled`). It connects to
+`http://localhost:8080` — fine on the server PC itself. On another device, build it with the
+server PC's LAN address:
+
+```bash
+flutter run -d windows --dart-define=API_BASE_URL=http://192.168.1.10:8080/api/v1
+```
+
+Find the address with `ipconfig` (IPv4 address of the Wi-Fi adapter). A DHCP reservation on the
+router keeps it stable.
 
 Build prerequisites per platform:
 

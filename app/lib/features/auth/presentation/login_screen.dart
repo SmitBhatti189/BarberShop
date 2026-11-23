@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../config/assets/app_icons.dart';
+import '../../../config/theme/app_colors.dart';
+import '../../../config/theme/app_radius.dart';
+import '../../../config/theme/app_sizes.dart';
 import '../../../config/theme/app_spacing.dart';
 import '../../../core/auth/auth_controller.dart';
 import '../../../core/auth/auth_models.dart';
 import '../../../core/providers.dart';
+import '../../../core/server/server_address.dart';
 import '../../../shared/widgets/app_button.dart';
 import '../../../shared/widgets/app_text_field.dart';
 import 'auth_form_frame.dart';
@@ -56,8 +60,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final canChangeServer = ref.watch(appEnvProvider).allowServerOverride;
 
     return AuthFormFrame(
-      icon: AppIcons.services,
-      title: 'Sign in to continue',
+      title: 'Welcome back',
+      subtitle: 'Sign in with your staff username.',
       child: Form(
         key: _formKey,
         child: AutofillGroup(
@@ -91,16 +95,57 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               AppSpacing.gapXl,
               AppButton(label: 'Sign in', onPressed: _submit, loading: _busy, expand: true),
               if (canChangeServer) ...[
-                AppSpacing.gapSm,
-                AppButton(
-                  label: 'Change server',
-                  variant: AppButtonVariant.text,
-                  onPressed: _busy ? null : () => ref.read(authControllerProvider.notifier).changeServer(),
+                AppSpacing.gapLg,
+                _ServerLine(
+                  address: displayServerAddress(ref.watch(apiClientProvider).baseUrl),
+                  onChange: _busy ? null : () => ref.read(authControllerProvider.notifier).changeServer(),
                 ),
               ],
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// "Server 192.168.1.10:8080 · Change server" under the sign-in button.
+class _ServerLine extends StatelessWidget {
+  const _ServerLine({required this.address, required this.onChange});
+
+  final String? address;
+  final VoidCallback? onChange;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = AppColors.of(context);
+    final textTheme = Theme.of(context).textTheme;
+    return Container(
+      padding: const EdgeInsets.only(left: AppSpacing.md),
+      decoration: BoxDecoration(
+        color: colors.surface,
+        borderRadius: AppRadius.button,
+        border: Border.all(color: colors.divider),
+      ),
+      child: Row(
+        children: [
+          Icon(AppIcons.server, size: AppSizes.iconSm, color: colors.textSecondary),
+          AppSpacing.gapSm,
+          Expanded(
+            child: Text(
+              address == null ? 'No server set' : 'Server $address',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: textTheme.bodyMedium?.copyWith(color: colors.textSecondary),
+            ),
+          ),
+          AppButton(
+            label: 'Change server',
+            variant: AppButtonVariant.text,
+            size: AppButtonSize.small,
+            onPressed: onChange,
+          ),
+        ],
       ),
     );
   }

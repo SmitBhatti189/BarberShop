@@ -4,6 +4,8 @@ How each implemented feature works end to end. Planned flows (billing, commissio
 
 ## 1. First launch → server address (dev builds)
 
+> **Currently switched off** (`AppEnv.serverSetupEnabled = false`, owner request 2026-11-19). The app never shows the server screen or a "Change server" button. It uses `--dart-define=API_BASE_URL` if given, otherwise `http://localhost:8080/api/v1` (on web: the PC that served the page, port 8080). The flow below applies again when the switch is set back to `true`.
+
 1. App starts → `AuthController` checks for a saved server address.
 2. None saved and no `--dart-define=API_BASE_URL` → **Server setup** screen.
 3. User types e.g. `192.168.1.10:8080` → normalised to `http://192.168.1.10:8080/api/v1`.

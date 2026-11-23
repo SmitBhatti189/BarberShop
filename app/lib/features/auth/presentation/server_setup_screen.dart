@@ -44,8 +44,8 @@ class _ServerSetupScreenState extends ConsumerState<ServerSetupScreen> {
   @override
   Widget build(BuildContext context) {
     return AuthFormFrame(
-      icon: AppIcons.server,
-      title: 'Connect to the salon server',
+      title: 'Connect to the salon',
+      subtitle: 'Tell this device where the salon server is.',
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

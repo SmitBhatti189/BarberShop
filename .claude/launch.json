@@ -12,6 +12,12 @@
       "runtimeExecutable": "cmd",
       "runtimeArgs": ["/c", "cd app && C:\\src\\flutter\\bin\\flutter.bat run -d web-server --release --web-port 5173 --web-hostname localhost"],
       "port": 5173
+    },
+    {
+      "name": "app-web-static",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["-e", "const h=require('http'),f=require('fs'),p=require('path');const r=p.resolve('app/build/web');const t={'.html':'text/html','.js':'text/javascript','.mjs':'text/javascript','.json':'application/json','.wasm':'application/wasm','.png':'image/png','.css':'text/css','.otf':'font/otf','.ttf':'font/ttf'};h.createServer((q,s)=>{let u=decodeURIComponent(q.url.split('?')[0]);let fp=p.join(r,u);if(!fp.startsWith(r)||!f.existsSync(fp)||f.statSync(fp).isDirectory())fp=p.join(r,'index.html');s.writeHead(200,{'Content-Type':t[p.extname(fp)]||'application/octet-stream'});f.createReadStream(fp).pipe(s)}).listen(5174,'localhost')"],
+      "port": 5174
     }
   ]
 }

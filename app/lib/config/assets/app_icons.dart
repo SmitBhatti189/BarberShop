@@ -14,6 +14,8 @@ abstract final class AppIcons {
   static const IconData roles = Icons.admin_panel_settings_outlined;
   static const IconData settings = Icons.settings_outlined;
   static const IconData more = Icons.more_horiz;
+  static const IconData add = Icons.add;
+  static const IconData forward = Icons.arrow_forward;
   static const IconData menuExpand = Icons.menu;
   static const IconData menuCollapse = Icons.menu_open;
   static const IconData profile = Icons.account_circle_outlined;
