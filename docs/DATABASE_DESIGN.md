@@ -137,43 +137,73 @@ Lifetime visits/spend are computed from `bills` (indexed), not stored.
 
 ### 4.4 Catalogue & inventory
 
-**`services`** — `id`, `name`, `description`, `price` CHECK ≥ 0, `duration_minutes` CHECK > 0, `is_active`, `sort_order`, version, timestamps. Partial UNIQUE `(lower(name)) WHERE is_active`. "Haircut + Beard" is its own service row (own price, own commission rate).
+**`services`** *(migration `0003_services`, 2026-11-26)* — `id`, `name` (not blank), `category` text nullable (free text, suggested from values in use), `description` nullable, `price` numeric(12,2) CHECK ≥ 0, `duration_minutes` int CHECK 1–600, `is_active`, version, timestamps. Partial UNIQUE `(lower(name)) WHERE is_active`; index `(lower(category))`. "Haircut + Beard" is its own service row (own price, own commission rate). Bills will copy name and price at the time of sale, so price changes never alter history. (`sort_order` from the draft was dropped — the list is ordered by category, then name.)
 
-**`products`** — `id`, `name`, `sku` UNIQUE nullable, `purchase_price`, `selling_price` (CHECK ≥ 0), `is_active`, version, timestamps.
+*Implemented in migration `0002_inventory` (2026-11-24). Pricing follows the owner's rule: a product has an **MRP** and a **default discount %**; the **selling price = MRP − discount** is computed (never stored), e.g. MRP 2000.00 at 10 % → 1800.00. Each delivery's **buying price lives only on its PURCHASE movement**, so there is no single "purchase price" on the product; the API reports the latest delivery's price as `lastPurchasePrice`.*
+
+**`products`**
+| Column | Type | Constraints / purpose |
+|---|---|---|
+| id | bigint | PK |
+| name | text | NOT NULL, not blank |
+| brand | text | nullable |
+| category | text | nullable, free text (suggested from values already used; no category table) |
+| mrp | numeric(12,2) | CHECK > 0 |
+| default_discount_pct | numeric(5,2) | CHECK 0–100, default 0 |
+| is_active | boolean | |
+| version, timestamps | | |
+
+Indexes: partial UNIQUE `(lower(name), lower(coalesce(brand,''))) WHERE is_active` — the same product can't be listed twice while active; GIN trigram on `name`; `(lower(category))`.
 
 **`product_stock`** — per-branch balance
-| branch_id FK | product_id FK | quantity int | low_stock_threshold int | version | updated_at |
-PK `(branch_id, product_id)`. CHECK `quantity >= 0` is **not** declared (negative stock is a setting); the service layer enforces it under row lock.
+| branch_id FK | product_id FK | quantity int | low_stock_threshold int CHECK ≥ 0 | version | updated_at |
+PK `(branch_id, product_id)`. CHECK `quantity >= 0` is **not** declared (negative stock is a setting); the service layer enforces it under a row lock (`SELECT … FOR UPDATE`) inside the same transaction that writes the ledger.
 Partial index `(branch_id) WHERE quantity <= low_stock_threshold` for low-stock alerts.
 
-**`stock_movements`** — immutable ledger
-| id | branch_id FK | product_id FK | movement_type CHECK IN (`PURCHASE`,`SALE`,`ADJUSTMENT`,`SALE_REVERSAL`) | quantity_delta int CHECK ≠ 0 | unit_cost nullable | bill_item_id FK nullable (required for SALE / SALE_REVERSAL) | reason (required for ADJUSTMENT) | created_by FK staff | created_at |
-Index `(branch_id, product_id, created_at DESC)`.
+**`stock_movements`** — immutable ledger; `quantity` always equals the sum of `quantity_delta`
+| id | branch_id FK | product_id FK | movement_type CHECK IN (`PURCHASE`,`SALE`,`ADJUSTMENT`,`SALE_REVERSAL`) | quantity_delta int CHECK ≠ 0 | unit_cost numeric(12,2) ≥ 0 | supplier_name | supplier_invoice_no | reason | note | created_by FK staff | created_at |
+CHECKs: PURCHASE ⇒ `quantity_delta > 0` and `unit_cost` set; ADJUSTMENT ⇒ `reason` set (`DAMAGED`, `EXPIRED`, `USED_IN_SALON`, `COUNT_CORRECTION`, `RETURNED_TO_SUPPLIER`, `OTHER` — checked by the API).
+`bill_item_id` (for SALE / SALE_REVERSAL) is added by the billing migration.
+Indexes: `(branch_id, product_id, id DESC)` for history paging; partial `(product_id, id DESC) WHERE movement_type = 'PURCHASE'` for the latest buying price.
 
 ### 4.5 Compensation
 
-**`staff_compensation`** — effective-dated salary plan
-| id | staff_id FK | monthly_salary numeric(12,2) CHECK ≥ 0 (0 = commission-only) | effective_from date | effective_to date nullable | created_by | created_at |
-`EXCLUDE USING gist (staff_id WITH =, daterange(effective_from, effective_to) WITH &&)` — one plan at a time.
-(`pay_period` will be added when daily pay is introduced — Q7 future.)
+Built in migration `0004_compensation` (owner decision 2026-11-24, replacing the earlier per-type staff default draft).
 
-**`commission_rules`** — effective-dated rate
+**`settings.default_commission_pct`** numeric(5,2), CHECK 0–100, default 0 — the one salon-wide default rate.
+
+**`staff_compensation`** — effective-dated monthly salary (a row exists only while the employee is salaried)
+| Column | Type | Constraints |
+|---|---|---|
+| id | bigint | PK |
+| staff_id | bigint | FK staff |
+| monthly_salary | numeric(12,2) | CHECK > 0 (no row = commission-based) |
+| effective_from / effective_to | timestamptz | `effective_to` null = current; CHECK to > from |
+| created_by, created_at | | |
+
+`EXCLUDE USING gist (staff_id WITH =, tstzrange(effective_from, effective_to) WITH &&)` — never two salaries at once; unique current row per staff.
+
+**`commission_rules`** — effective-dated own rate of one employee for one item
 | Column | Type | Constraints |
 |---|---|---|
 | id | bigint | PK |
 | staff_id | bigint | FK staff |
 | item_type | text | CHECK IN (`SERVICE`,`PRODUCT`) |
-| service_id | bigint | FK nullable |
-| product_id | bigint | FK nullable |
+| service_id | bigint | FK services; required when SERVICE |
+| product_id | bigint | FK products; required when PRODUCT |
 | rate_pct | numeric(5,2) | CHECK 0–100 |
-| effective_from / effective_to | timestamptz | |
+| effective_from / effective_to | timestamptz | `effective_to` null = current |
 | created_by, created_at | | |
 
-CHECK: SERVICE ⇒ product_id NULL; PRODUCT ⇒ service_id NULL. Both NULL = **default rate** for that item type.
-Exclusion: one active rule per `(staff_id, item_type, COALESCE(service_id, product_id, 0))` over time.
-Lookup order: specific item rule → staff default for the type → no commission.
-Example: fixed-salary employee with only a PRODUCT default rule of 10% ⇒ salary + 10% on products sold, nothing on services.
-Example: Staff A — Beard 30%, Haircut 40%, Facial 20%, default for other services 25% — each is its own row; every service line uses its own rate.
+CHECK: exactly the matching item column is set. Unique current rule per `(staff_id, item_type, COALESCE(service_id, product_id)) WHERE effective_to IS NULL`.
+Changing a salary or rate closes the current row (`effective_to` = now) and inserts a new one, so past bills can always be explained. Saves lock the employee row first and take the time after the lock.
+
+**Which rate applies** (`server/src/modules/compensation/commission.calculator.ts`, the only place):
+1. the employee's own rate for that service/product, else
+2. if the employee has **no** monthly salary → the salon default, else
+3. no commission.
+
+Example: salon default 10 %. Rahul (commission-based) — Haircut 40 %, everything else 10 %. Vikram (salary ₹15,000) — Beard Oil 5 %, nothing on other items.
 
 **`staff_ledger`** — everything that changes a staff member's balance *except* commission (which is read from `bill_items`)
 | Column | Type | Constraints / purpose |

@@ -33,4 +33,14 @@ abstract final class AppIcons {
   static const IconData empty = Icons.inbox_outlined;
   static const IconData retry = Icons.refresh;
   static const IconData construction = Icons.construction_outlined;
+  static const IconData search = Icons.search;
+  static const IconData phone = Icons.phone_outlined;
+  static const IconData email = Icons.mail_outline;
+  static const IconData calendar = Icons.calendar_today_outlined;
+  static const IconData login = Icons.key_outlined;
+  static const IconData noLogin = Icons.key_off_outlined;
+  static const IconData deactivate = Icons.person_off_outlined;
+  static const IconData activate = Icons.person_add_alt_1_outlined;
+  static const IconData chevronRight = Icons.chevron_right;
+  static const IconData back = Icons.arrow_back;
 }

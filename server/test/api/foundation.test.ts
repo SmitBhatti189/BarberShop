@@ -30,7 +30,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await ctx.close();
+  await ctx?.close();
 });
 
 describe('health', () => {
@@ -54,6 +54,33 @@ describe('error envelope', () => {
     const { error } = res.json();
     expect(error.code).toBe('VALIDATION_ERROR');
     expect(error.details.map((d: { field: string }) => d.field).sort()).toEqual(['body.name', 'body.qty']);
+  });
+
+  it('accepts bodiless calls sent with a JSON content type (as the app sends them)', async () => {
+    const { token } = await ctx.createStaff({ role: SYSTEM_ROLES.MANAGER });
+    const res = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/v1/auth/logout',
+      headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+    });
+    expect(res.statusCode).toBe(204);
+  });
+
+  it('still rejects malformed JSON and prototype poisoning', async () => {
+    const bad = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/v1/__test/echo',
+      headers: { 'content-type': 'application/json' },
+      payload: '{"name":',
+    });
+    expect(bad.statusCode).toBe(400);
+    const poisoned = await ctx.app.inject({
+      method: 'POST',
+      url: '/api/v1/__test/echo',
+      headers: { 'content-type': 'application/json' },
+      payload: '{"name":"ab","qty":1,"__proto__":{"admin":true}}',
+    });
+    expect(poisoned.statusCode).toBe(400);
   });
 
   it('maps business-rule errors to 422', async () => {

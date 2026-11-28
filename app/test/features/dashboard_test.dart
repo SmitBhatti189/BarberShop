@@ -58,11 +58,7 @@ void main() {
 
     test('barber sees only their own work — no salon-wide money', () {
       final layout = dashboardLayoutFor(barber);
-      expect(layout.stats, [
-        DashboardStat.myClientsToday,
-        DashboardStat.myCommissionToday,
-        DashboardStat.myBalance,
-      ]);
+      expect(layout.stats, [DashboardStat.myClientsToday, DashboardStat.myCommissionToday, DashboardStat.myBalance]);
       expect(layout.stats, isNot(contains(DashboardStat.salesToday)));
       expect(layout.stats, isNot(contains(DashboardStat.staffOwed)));
       expect(layout.mainPanels, [DashboardPanel.myDay]);

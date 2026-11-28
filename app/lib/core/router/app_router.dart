@@ -10,7 +10,21 @@ import '../../features/dashboard/presentation/dashboard_screen.dart';
 import '../../shared/widgets/placeholder_page.dart';
 import '../auth/auth_controller.dart';
 import '../auth/auth_models.dart';
+import '../../config/assets/app_icons.dart';
+import '../../features/compensation/presentation/pay_setup_screen.dart';
+import '../../features/inventory/presentation/inventory_list_screen.dart';
+import '../../features/inventory/presentation/inventory_routes.dart';
+import '../../features/inventory/presentation/product_detail_screen.dart';
+import '../../features/inventory/presentation/product_new_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
+import '../../features/services/presentation/service_detail_screen.dart';
+import '../../features/services/presentation/service_new_screen.dart';
+import '../../features/services/presentation/services_list_screen.dart';
+import '../../features/services/presentation/services_routes.dart';
+import '../../features/staff/presentation/employee_detail_screen.dart';
+import '../../features/staff/presentation/employee_new_screen.dart';
+import '../../features/staff/presentation/staff_list_screen.dart';
+import '../../features/staff/presentation/staff_routes.dart';
 import 'app_destinations.dart';
 import 'app_routes.dart';
 import 'app_shell.dart';
@@ -56,8 +70,66 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         routes: [
           GoRoute(path: AppDestinations.dashboard.path, pageBuilder: _page(const DashboardScreen())),
           GoRoute(path: AppRoutes.profile, pageBuilder: _page(const ProfileScreen())),
+          GoRoute(
+            path: StaffRoutes.list,
+            pageBuilder: _page(const StaffListScreen()),
+            routes: [
+              GoRoute(path: 'new', pageBuilder: _page(const EmployeeNewScreen())),
+              GoRoute(path: 'pay', pageBuilder: _page(const PaySetupScreen())),
+              GoRoute(
+                path: ':id',
+                pageBuilder: (context, state) {
+                  final id = int.tryParse(state.pathParameters['id'] ?? '');
+                  return NoTransitionPage<void>(
+                    key: state.pageKey,
+                    child: id == null
+                        ? const PlaceholderPage(title: 'Employee not found', icon: AppIcons.staff)
+                        : EmployeeDetailScreen(id: id),
+                  );
+                },
+              ),
+            ],
+          ),
+          GoRoute(
+            path: InventoryRoutes.list,
+            pageBuilder: _page(const InventoryListScreen()),
+            routes: [
+              GoRoute(path: 'new', pageBuilder: _page(const ProductNewScreen())),
+              GoRoute(
+                path: ':id',
+                pageBuilder: (context, state) {
+                  final id = int.tryParse(state.pathParameters['id'] ?? '');
+                  return NoTransitionPage<void>(
+                    key: state.pageKey,
+                    child: id == null
+                        ? const PlaceholderPage(title: 'Product not found', icon: AppIcons.inventory)
+                        : ProductDetailScreen(id: id),
+                  );
+                },
+              ),
+            ],
+          ),
+          GoRoute(
+            path: ServicesRoutes.list,
+            pageBuilder: _page(const ServicesListScreen()),
+            routes: [
+              GoRoute(path: 'new', pageBuilder: _page(const ServiceNewScreen())),
+              GoRoute(
+                path: ':id',
+                pageBuilder: (context, state) {
+                  final id = int.tryParse(state.pathParameters['id'] ?? '');
+                  return NoTransitionPage<void>(
+                    key: state.pageKey,
+                    child: id == null
+                        ? const PlaceholderPage(title: 'Service not found', icon: AppIcons.services)
+                        : ServiceDetailScreen(id: id),
+                  );
+                },
+              ),
+            ],
+          ),
           // Modules not built yet render an honest placeholder (see PlaceholderPage).
-          for (final d in AppDestinations.all.where((d) => d != AppDestinations.dashboard))
+          for (final d in AppDestinations.all.where((d) => !_built.contains(d)))
             GoRoute(
               path: d.path,
               pageBuilder: _page(PlaceholderPage(title: d.label, icon: d.icon)),
@@ -69,6 +141,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
   ref.onDispose(router.dispose);
   return router;
 });
+
+/// Sections with real screens; the rest get the placeholder route.
+const _built = {AppDestinations.dashboard, AppDestinations.staff, AppDestinations.inventory, AppDestinations.services};
 
 /// Shell pages switch without transition animations (lighter, desktop-like).
 Page<void> Function(BuildContext, GoRouterState) _page(Widget child) =>

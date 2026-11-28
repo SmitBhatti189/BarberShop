@@ -16,6 +16,7 @@
     "db:migrate": "tsx --env-file=.env src/db/migrate.ts latest",
     "db:rollback": "tsx --env-file=.env src/db/migrate.ts down",
     "staff:create-manager": "tsx --env-file=.env scripts/create-manager.ts",
+    "db:seed:demo": "tsx --env-file=.env scripts/seed-demo.ts",
     "test": "vitest run",
     "test:watch": "vitest"
   },

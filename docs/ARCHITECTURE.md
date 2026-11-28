@@ -446,6 +446,7 @@ frontend → API → database flow.
 | R-Q3 | Extra discounts | Only roles granted `billing.discount`. |
 | — | Commission per service | Each staff can have a different rate per service/product (e.g. beard x%, haircut y%). |
 | — | Bill round-off | Customer total to nearest ₹10: last digit 1–5 down, 6–9 up. Commission unaffected. |
+| — | Default commission (2026-11-24) | Each employee has a monthly salary and/or commission %s per service/product. A **salon-wide default %** (set at the top of the commission page) applies when an employee has **no monthly salary and no specific % for that item**. Salaried employees earn commission only where a specific % is set. Commission page is laid out per employee, covering services and products. |
 
 ## 10. Deployment (testing phase — salon LAN)
 

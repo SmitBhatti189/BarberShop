@@ -19,6 +19,10 @@ abstract final class AppSizes {
   static const double contentMaxWidth = 1280;
   static const double dialogMaxWidth = 520;
 
+  // Employee form: details and sign-in side by side from this content width.
+  static const double employeeFormTwoColumnMin = 720;
+  static const double employeeFormMaxWidth = 960;
+
   // Navigation
   static const double navBarHeight = 64;
   static const double brandMarkSize = 34; // gold square with the scissors

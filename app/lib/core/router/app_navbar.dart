@@ -189,10 +189,9 @@ class _Avatar extends StatelessWidget {
       foregroundColor: colors.sidebarSelectedText,
       child: Text(
         initials,
-        style: Theme.of(context).textTheme.labelMedium?.copyWith(
-          color: colors.sidebarSelectedText,
-          fontWeight: FontWeight.w600,
-        ),
+        style: Theme.of(
+          context,
+        ).textTheme.labelMedium?.copyWith(color: colors.sidebarSelectedText, fontWeight: FontWeight.w600),
       ),
     );
   }

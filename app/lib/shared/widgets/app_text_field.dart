@@ -23,7 +23,16 @@ class AppTextField extends StatefulWidget {
     this.inputFormatters,
     this.errorText,
     this.maxLines = 1,
+    this.onChanged,
+    this.readOnly = false,
+    this.onTap,
   });
+
+  final ValueChanged<String>? onChanged;
+
+  /// Read-only fields that open a picker on tap (e.g. dates).
+  final bool readOnly;
+  final VoidCallback? onTap;
 
   final String label;
   final TextEditingController? controller;
@@ -60,6 +69,9 @@ class _AppTextFieldState extends State<AppTextField> {
       keyboardType: widget.keyboardType,
       textInputAction: widget.textInputAction,
       onFieldSubmitted: widget.onSubmitted,
+      onChanged: widget.onChanged,
+      readOnly: widget.readOnly,
+      onTap: widget.onTap,
       obscureText: _hidden,
       enabled: widget.enabled,
       autofocus: widget.autofocus,

@@ -63,7 +63,10 @@ class DashboardScreen extends ConsumerWidget {
                 children: [
                   Expanded(child: _Stack(children: main)),
                   AppSpacing.gapLg,
-                  SizedBox(width: AppSizes.dashboardSideWidth, child: _Stack(children: side)),
+                  SizedBox(
+                    width: AppSizes.dashboardSideWidth,
+                    child: _Stack(children: side),
+                  ),
                 ],
               );
             },
@@ -97,11 +100,7 @@ class _StatGrid extends StatelessWidget {
               SizedBox(
                 key: Key('stat-${s.name}'),
                 width: width,
-                child: StatTile(
-                  label: s.label,
-                  caption: 'Shows once ${s.module} is built',
-                  highlighted: s.highlighted,
-                ),
+                child: StatTile(label: s.label, caption: 'Shows once ${s.module} is built', highlighted: s.highlighted),
               ),
           ],
         );

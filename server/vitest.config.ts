@@ -8,7 +8,9 @@ export default defineConfig({
     include: ['test/**/*.test.ts'],
     // Database-backed suites share one test database; run files one at a time.
     fileParallelism: false,
-    testTimeout: 15_000,
-    hookTimeout: 30_000,
+    // Generous: each file rebuilds the test database, which takes well over
+    // 30 s on the salon PC when it is also busy (e.g. a Flutter build).
+    testTimeout: 30_000,
+    hookTimeout: 120_000,
   },
 });

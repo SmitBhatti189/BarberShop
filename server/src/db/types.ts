@@ -36,6 +36,7 @@ export interface SettingsTable {
   tax_enabled: Generated<boolean>;
   tax_rate_pct: ColumnType<string, string | undefined, string>;
   prices_include_tax: Generated<boolean>;
+  default_commission_pct: ColumnType<string, string | undefined, string>;
   version: Generated<number>;
   updated_at: UpdatedAt;
 }
@@ -90,6 +91,85 @@ export interface AuthSessionsTable {
   created_at: CreatedAt;
 }
 
+export interface ProductsTable {
+  id: Generated<number>;
+  name: string;
+  brand: string | null;
+  category: string | null;
+  /** NUMERIC as string. */
+  mrp: string;
+  default_discount_pct: ColumnType<string, string | undefined, string>;
+  is_active: Generated<boolean>;
+  version: Generated<number>;
+  created_at: CreatedAt;
+  updated_at: UpdatedAt;
+}
+
+export interface ProductStockTable {
+  branch_id: number;
+  product_id: number;
+  quantity: Generated<number>;
+  low_stock_threshold: Generated<number>;
+  version: Generated<number>;
+  updated_at: UpdatedAt;
+}
+
+export type StockMovementType = 'PURCHASE' | 'SALE' | 'ADJUSTMENT' | 'SALE_REVERSAL';
+
+export interface StockMovementsTable {
+  id: Generated<number>;
+  branch_id: number;
+  product_id: number;
+  movement_type: StockMovementType;
+  quantity_delta: number;
+  unit_cost: string | null;
+  supplier_name: string | null;
+  supplier_invoice_no: string | null;
+  reason: string | null;
+  note: string | null;
+  created_by: number;
+  created_at: CreatedAt;
+}
+
+export interface ServicesTable {
+  id: Generated<number>;
+  name: string;
+  category: string | null;
+  description: string | null;
+  /** NUMERIC as string. */
+  price: string;
+  duration_minutes: number;
+  is_active: Generated<boolean>;
+  version: Generated<number>;
+  created_at: CreatedAt;
+  updated_at: UpdatedAt;
+}
+
+export interface StaffCompensationTable {
+  id: Generated<number>;
+  staff_id: number;
+  monthly_salary: string;
+  effective_from: ColumnType<Date, Date | string | undefined, Date | string>;
+  effective_to: ColumnType<Date | null, Date | string | null | undefined, Date | string | null>;
+  created_by: number;
+  created_at: CreatedAt;
+}
+
+export type CommissionItemType = 'SERVICE' | 'PRODUCT';
+
+export interface CommissionRulesTable {
+  id: Generated<number>;
+  staff_id: number;
+  item_type: CommissionItemType;
+  service_id: number | null;
+  product_id: number | null;
+  rate_pct: string;
+  effective_from: ColumnType<Date, Date | string | undefined, Date | string>;
+  effective_to: ColumnType<Date | null, Date | string | null | undefined, Date | string | null>;
+  created_by: number;
+  created_at: CreatedAt;
+}
+
 export interface Database {
   branches: BranchesTable;
   settings: SettingsTable;
@@ -98,6 +178,12 @@ export interface Database {
   role_permissions: RolePermissionsTable;
   staff: StaffTable;
   auth_sessions: AuthSessionsTable;
+  products: ProductsTable;
+  product_stock: ProductStockTable;
+  stock_movements: StockMovementsTable;
+  services: ServicesTable;
+  staff_compensation: StaffCompensationTable;
+  commission_rules: CommissionRulesTable;
 }
 
 export type Staff = Selectable<StaffTable>;

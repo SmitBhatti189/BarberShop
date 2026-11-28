@@ -59,7 +59,17 @@ class ApiClient {
 
   Future<T> put<T>(String path, {Object? body}) => _send(() => _dio.put<Object?>(path, data: body));
 
-  Future<void> delete(String path) => _send<void>(() => _dio.delete<Object?>(path));
+  Future<T> delete<T>(String path) => _send<T>(() => _dio.delete<Object?>(path));
+
+  /// GET returning the whole envelope (`data` and `meta`) — for paged lists.
+  Future<Map<String, dynamic>> getEnvelope(String path, {Map<String, dynamic>? query}) async {
+    try {
+      final res = await _dio.get<Object?>(path, queryParameters: query);
+      return (res.data as Map).cast<String, dynamic>();
+    } on DioException catch (e) {
+      throw e.error is ApiException ? e.error! as ApiException : ApiException.fromDio(e);
+    }
+  }
 
   /// Calls without any token handling (health checks against a candidate server).
   Future<Map<String, dynamic>> probe(String absoluteUrl) async {

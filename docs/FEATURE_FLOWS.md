@@ -49,6 +49,39 @@ Production builds use the compiled-in address only.
 - **Hover labels** are switched per element in `app/lib/config/app_hover_labels.dart`.
 - Theme and sidebar choices are stored on the device only (OS secure storage), never on the server.
 
+## 8. Employee management (Staff & pay → Employees)
+
+1. **List** (`/staff`, needs `staff.view`): active employees by default; filter Active / Inactive / All; search by name, username or mobile (runs 0.3 s after typing stops). Wide screens show a table (name, role, mobile, sign-in); phones show cards.
+2. **Add** (`/staff/new`, needs `staff.manage`): name, optional mobile/email, role, optional join date, "performs services" (can be booked), and optionally "can sign in" with username + password. The app checks the obvious mistakes; the server re-checks everything and its messages (e.g. duplicate mobile) appear under the matching field. On success the employee's page opens.
+3. **Edit** (`/staff/:id`): the form saves with the version it loaded. If someone else saved first, the server refuses (`STALE`), the app says so and reloads the latest values.
+4. **Sign-in card:** give a login, change the password (ends their other sessions), or remove the login (signs them out). Employees without a login can still be booked and paid.
+5. **Deactivate / Reactivate:** asks for confirmation; deactivating signs them out everywhere and hides them from the default list. Their history stays.
+6. **Guards (server-side):** you can't deactivate yourself or remove your own login, and the last active Manager who can sign in can't be deactivated, demoted or have their login removed.
+
+## 11. Commission & salary (Staff & pay → Commission & salary)
+
+1. **Open** `/staff/pay` (needs `compensation.view`); the "Employees | Commission & salary" switch at the top of Staff & pay shows when you can see both.
+2. **Salon default %** (top card, `compensation.manage` to change): applies to commission-based employees on any item without their own rate.
+3. **Pick an employee** (list on the left; a dropdown on phones). The list shows "Commission" or "Salary ₹X" and how many own rates they have.
+4. **Monthly salary:** blank = commission-based. With a salary, items without an own rate earn nothing — the page says which rule applies and each row's note ("Own rate", "Default 10%", "No commission") updates as you type.
+5. **Rates:** one % field per active service and product; blank uses the rule above. **Save changes** sends the salary and only the rates you changed; the server validates, locks the employee and records history (old row closed, new row added). Without `compensation.manage` the page is view-only.
+6. Used next by billing: each bill line will copy the rate that applied at that moment.
+
+## 10. Services
+
+1. **List** (`/services`, needs `services.view` — staff have it): every service with category, duration and price, grouped by category. Search, category and Active/Inactive/All filters.
+2. **Add service** (`/services/new`, needs `services.manage`): name, optional category (one-tap suggestions), price, duration in minutes (quick chips 15 / 30 / 45 / 1 h / 1 h 30), optional description. Returns to the list.
+3. **Service page** (`/services/:id`): edit any field (versioned save); "Stop offering" deactivates it — hidden from booking and billing, past bills keep it.
+4. Used next by: appointments (duration blocks the barber's time), billing (price copied onto the bill), and commission rates (per employee, per service).
+
+## 9. Inventory
+
+1. **List** (`/inventory`, needs `inventory.view`): products with stock, MRP, discount and selling price; "Low stock" / "Out of stock" labels. Filter by search (name or brand), category, Active/Inactive/All, and "Low stock only".
+2. **Add product** (`/inventory/new`, needs `inventory.manage`): left — name, brand, category (one-tap suggestions from names already used), MRP, default discount %, low-stock alert level; the selling price is shown as you type (display only; the server computes the saved value with the same rule). Right — optional opening stock (quantity, buying price per unit, supplier, bill no.), saved as the first delivery.
+3. **Product page** (`/inventory/:id`): edit details and prices (versioned save); Stock card with current units, selling price, MRP, discount and last buying price; **Receive stock** (a delivery: quantity + buying price per unit, optional supplier, bill no., note) and **Adjust stock** (take out / add in, with a reason; "Other" needs a note). Stock history lists every movement newest first ("Show older" pages back).
+4. **Rules (server-side):** stock never goes below zero unless the negative-stock setting is on; inactive products can't take stock changes; the same name + brand can't be active twice; each stock change is locked and written to the ledger in one transaction.
+5. **Prices at the till (with Billing, later):** billing will charge the selling price (MRP − default discount) and record each sale as a SALE movement.
+
 ## 6. App start with a saved session
 
 Saved tokens → `GET /auth/me` (refreshing if needed) → Dashboard. If the server is unreachable the tokens are kept and Login shows the network message, so the next attempt can resume the session.

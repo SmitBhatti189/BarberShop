@@ -54,3 +54,9 @@ class ApiException implements Exception {
   @override
   String toString() => 'ApiException($code, $statusCode): $message';
 }
+
+/// Server field errors keyed by the form's own field names
+/// (`body.login.username` → `username`, `body.openingStock.unitCost` → `unitCost`).
+Map<String, String> formFieldErrors(ApiException e) => {
+  for (final entry in e.fieldErrors.entries) entry.key.split('.').last: entry.value,
+};

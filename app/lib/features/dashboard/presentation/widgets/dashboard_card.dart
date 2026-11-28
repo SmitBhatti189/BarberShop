@@ -45,7 +45,10 @@ class DashboardCard extends StatelessWidget {
                 const SizedBox(height: AppSizes.buttonHeight),
             ],
           ),
-          Padding(padding: const EdgeInsets.only(right: AppSpacing.md), child: child),
+          Padding(
+            padding: const EdgeInsets.only(right: AppSpacing.md),
+            child: child,
+          ),
         ],
       ),
     );

@@ -38,7 +38,11 @@ enum DashboardPanel {
   chairsToday('Chairs today', "Every barber's bookings for today on one timeline.", AppDestinations.appointments),
   myDay('My day', 'Your bookings for today, with the client in your chair first.', AppDestinations.appointments),
   lowStock('Low stock', 'Products at or below their reorder level.', AppDestinations.inventory),
-  staffBalances('Staff balances', 'Who owes whom right now: commission, salary and withdrawals.', AppDestinations.staff),
+  staffBalances(
+    'Staff balances',
+    'Who owes whom right now: commission, salary and withdrawals.',
+    AppDestinations.staff,
+  ),
   myEarnings('My earnings', 'Commission this month, your balance and withdrawals.', AppDestinations.myEarnings);
 
   const DashboardPanel(this.title, this.description, this.destination);
@@ -64,7 +68,12 @@ enum DashboardAction {
 }
 
 class DashboardLayout {
-  const DashboardLayout({required this.stats, required this.mainPanels, required this.sidePanels, required this.actions});
+  const DashboardLayout({
+    required this.stats,
+    required this.mainPanels,
+    required this.sidePanels,
+    required this.actions,
+  });
 
   final List<DashboardStat> stats;
 
@@ -96,10 +105,7 @@ DashboardLayout dashboardLayoutFor(CurrentUser user) {
       if (seesStaffPay) DashboardStat.staffOwed,
       if (seesOwnEarnings) DashboardStat.myBalance,
     ],
-    mainPanels: [
-      if (seesAllBookings) DashboardPanel.chairsToday,
-      if (seesOwnBookings) DashboardPanel.myDay,
-    ],
+    mainPanels: [if (seesAllBookings) DashboardPanel.chairsToday, if (seesOwnBookings) DashboardPanel.myDay],
     sidePanels: [
       if (seesStock) DashboardPanel.lowStock,
       if (seesStaffPay) DashboardPanel.staffBalances,

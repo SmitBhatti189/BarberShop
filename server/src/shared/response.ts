@@ -8,6 +8,6 @@ export function ok<T>(data: T): ApiResponse<T> {
   return { data };
 }
 
-export function okWithMeta<T, M>(data: T, meta: M): ApiResponse<T, M> {
+export function okWithMeta<T, M>(data: T, meta: M): { data: T; meta: M } {
   return { data, meta };
 }

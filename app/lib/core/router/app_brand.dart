@@ -43,9 +43,7 @@ class AppBrand extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = AppColors.of(context);
-    final nameStyle = AppTypography.brandName.copyWith(
-      color: onDark ? colors.sidebarTextStrong : colors.textPrimary,
-    );
+    final nameStyle = AppTypography.brandName.copyWith(color: onDark ? colors.sidebarTextStrong : colors.textPrimary);
     return HoverLabel(
       enabled: AppHoverLabels.appName,
       message: AppStrings.appName,

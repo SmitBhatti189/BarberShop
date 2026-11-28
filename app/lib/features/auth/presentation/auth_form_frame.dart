@@ -53,10 +53,7 @@ class _Form extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (showBrand) ...[
-                  const Align(alignment: Alignment.centerLeft, child: AppBrand()),
-                  AppSpacing.gapXxl,
-                ],
+                if (showBrand) ...[const Align(alignment: Alignment.centerLeft, child: AppBrand()), AppSpacing.gapXxl],
                 Text(title, style: theme.textTheme.displaySmall),
                 AppSpacing.gapSm,
                 Text(subtitle, style: theme.textTheme.bodyLarge?.copyWith(color: theme.colorScheme.onSurfaceVariant)),

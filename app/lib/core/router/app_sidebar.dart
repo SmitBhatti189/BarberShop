@@ -111,9 +111,7 @@ class _SidebarHeader extends StatelessWidget {
                 )
               else
                 const Expanded(
-                  child: Center(
-                    child: AppBrand(showName: false, onDark: true, markSize: AppSizes.brandMarkSmall),
-                  ),
+                  child: Center(child: AppBrand(showName: false, onDark: true, markSize: AppSizes.brandMarkSmall)),
                 ),
               HoverLabel(
                 enabled: AppHoverLabels.sidebarToggle,
@@ -157,16 +155,8 @@ class _GroupHeader extends StatelessWidget {
       );
     }
     return Padding(
-      padding: EdgeInsets.fromLTRB(
-        AppSpacing.md,
-        first ? AppSpacing.sm : AppSpacing.lg,
-        AppSpacing.md,
-        AppSpacing.sm,
-      ),
-      child: Text(
-        group.label.toUpperCase(),
-        style: AppTypography.overline.copyWith(color: colors.sidebarMuted),
-      ),
+      padding: EdgeInsets.fromLTRB(AppSpacing.md, first ? AppSpacing.sm : AppSpacing.lg, AppSpacing.md, AppSpacing.sm),
+      child: Text(group.label.toUpperCase(), style: AppTypography.overline.copyWith(color: colors.sidebarMuted)),
     );
   }
 }

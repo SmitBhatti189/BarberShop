@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../config/app_strings.dart';
 import '../../config/theme/app_sizes.dart';
+import '../../config/theme/app_spacing.dart';
 import 'app_button.dart';
 
 /// Shows a confirmation dialog; resolves to true only when confirmed.
@@ -36,11 +37,15 @@ Future<bool> showConfirmDialog(
 
 /// Width-capped dialog so it stays readable on desktop.
 class AppDialog extends StatelessWidget {
-  const AppDialog({super.key, required this.title, required this.content, this.actions = const []});
+  const AppDialog({super.key, required this.title, required this.content, this.actions = const [], this.error});
 
   final String title;
   final Widget content;
   final List<Widget> actions;
+
+  /// Why the last action failed, shown inside the dialog. (A snackbar would
+  /// appear behind the dialog's barrier, where it can't be read.)
+  final String? error;
 
   @override
   Widget build(BuildContext context) {
@@ -48,7 +53,23 @@ class AppDialog extends StatelessWidget {
       title: Text(title),
       content: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: AppSizes.dialogMaxWidth),
-        child: content,
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              content,
+              if (error != null) ...[
+                AppSpacing.gapMd,
+                Text(
+                  error!,
+                  key: const Key('dialog-error'),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Theme.of(context).colorScheme.error),
+                ),
+              ],
+            ],
+          ),
+        ),
       ),
       actions: actions,
     );

@@ -37,7 +37,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await ctx.close();
+  await ctx?.close();
 });
 
 describe('POST /auth/login', () => {
